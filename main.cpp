@@ -1,4 +1,4 @@
-
+#define GL_SILENCE_DEPRECATION // for MacOSX
 #define GLFW_INCLUDE_GLU
 #include <glfw/glfw3.h>
 //#include <GL/glew.h>
@@ -32,8 +32,8 @@ int ballspeed = 100;
 // Added in Exercise 9 - End *****************************************************************
 
 //camera settings
-const int camera_width  = 640;
-const int camera_height = 480;
+const int camera_width  = 1280; // for MacOSX
+const int camera_height = 720; // for MacOSX
 const int virtual_camera_angle = 30;
 unsigned char bkgnd[camera_width*camera_height*3];
 
@@ -178,7 +178,8 @@ void display(GLFWwindow* window, const cv::Mat &img_bgr, std::vector<Marker> &ma
     gluOrtho2D( 0.0, camera_width, 0.0, camera_height );
 
     glRasterPos2i( 0, camera_height-1 );
-    glDrawPixels( camera_width, camera_height, GL_BGR_EXT, GL_UNSIGNED_BYTE, bkgnd );
+//    glDrawPixels( camera_width, camera_height, GL_BGR_EXT, GL_UNSIGNED_BYTE, bkgnd );
+    glDrawPixels( camera_width, camera_height, GL_BGR, GL_UNSIGNED_BYTE, bkgnd );  // for MacOSX
 
     glPopMatrix();
 
@@ -209,6 +210,12 @@ void display(GLFWwindow* window, const cv::Mat &img_bgr, std::vector<Marker> &ma
 			resultTransposedMatrix[x*4+y] = resultMatrix_005A[y*4+x];
 // Added in Exercise 9 - End *****************************************************************
 
+    // Fixed tranlate scale for MacOSX
+    float scale = 0.3;
+    resultTransposedMatrix[12] *= scale;  // x方向のスケール調整
+    resultTransposedMatrix[13] *= scale;  // y方向のスケール調整
+    // End for MacOSX
+    
 	//glLoadTransposeMatrixf( resultMatrix );
 	glLoadMatrixf( resultTransposedMatrix );
 	drawSnowman();
@@ -305,9 +312,10 @@ int main(int argc, char* argv[]) {
 
     // setup OpenCV
 	cv::Mat img_bgr;
+//    cv::Mat img_rgb; // for MacOSX
 	InitializeVideoStream(cap);
-	const double kMarkerSize = 0.03;// 0.048; // [m]
-	MarkerTracker markerTracker(kMarkerSize);
+	const double kMarkerSize = 0.048;// 0.048; // [m]
+	MarkerTracker markerTracker(kMarkerSize, 87, 95);
 	
 	std::vector<Marker> markers;
 //	float resultMatrix[16];
@@ -332,6 +340,7 @@ int main(int argc, char* argv[]) {
 //		cv::waitKey(10); /// Wait for one sec.
 
 		/* Render here */
+//        cv::cvtColor(img_bgr, img_rgb, cv::COLOR_BGR2RGB);
 		display(window, img_bgr, markers);
 
 		/* Swap front and back buffers */

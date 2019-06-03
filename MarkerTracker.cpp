@@ -62,7 +62,7 @@ bool MarkerTracker::checkContourCondition(const Contour &contour_approx, const c
 
 	// Filter bad contours
 	const int kImageSize = image_bgr.rows*image_bgr.cols;
-	const int kMarkerSizeMin = (int)(kImageSize*0.01);
+	const int kMarkerSizeMin = (int)(kImageSize*0.001);
 	const int kMarkerSizeMax = (int)(kImageSize*0.99);
 	const bool is_contour_valid = (marker_size > kMarkerSizeMin)
 		&& (marker_size < kMarkerSizeMax)
@@ -119,8 +119,10 @@ void MarkerTracker::findMarker( cv::Mat &image_bgr, std::vector<Marker> &markers
 	ContourHierarchy hierarchy;
 	cv::findContours(image_gray_filtered, contours, hierarchy, cv::RETR_LIST, cv::CHAIN_APPROX_SIMPLE);
 
-	for each (auto contour in contours)
+//    for each (auto contour in contours)
+    for(int idx = 0; idx < contours.size(); idx++)
 	{
+        std::vector<cv::Point> contour = contours.at(idx);
 		// Approximate a contour
 		const auto kEpsilon = 0.05*cv::arcLength(contour, true);
 		Contour contour_approx;
@@ -391,7 +393,7 @@ void MarkerTracker::findMarker( cv::Mat &image_bgr, std::vector<Marker> &markers
 		cv::warpPerspective(image_gray, iplMarker, projMat, cv::Size(6, 6));
 		
 
-		const int bw_thresh = 55;
+//        const int bw_thresh = 95;   // for MaxOSX original: 55
 		cv::threshold(iplMarker, iplMarker, bw_thresh, 255, cv::THRESH_BINARY);
 		//now we have a B/W image of a supposed Marker
 
