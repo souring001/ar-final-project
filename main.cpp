@@ -1,4 +1,4 @@
-#define GL_SILENCE_DEPRECATION // for MacOSX
+#define GL_SILENCE_DEPRECATION // for MacOS
 #define GLFW_INCLUDE_GLU
 #include <GLFW/glfw3.h>
 #include <iostream>
@@ -10,6 +10,10 @@
 #include "PoseEstimation.h"
 #include "MarkerTracker.h"
 #include "DrawPrimitives.h"
+
+#define MARKER_SIZE 0.048 // size of AR marker [m]
+#define THRESH 87   // threshold for fiding contours
+#define BW_THRESH 95    // threshold for getting values of AR marker
 
 struct Position { double x,y,z; };
 
@@ -25,8 +29,8 @@ Position ballpos;
 int ballspeed = 100;
 
 //camera settings
-const int camera_width  = 1280;
-const int camera_height = 720;
+const int camera_width  = 1280; // for MacOS
+const int camera_height = 720; // for MacOS
 unsigned char bkgnd[camera_width*camera_height*3];
 
 void InitializeVideoStream( cv::VideoCapture &camera ) {
@@ -167,7 +171,7 @@ void display(GLFWwindow* window, const cv::Mat &img_bgr, std::vector<Marker> &ma
 
     glRasterPos2i( 0, camera_height-1 );
 //    glDrawPixels( camera_width, camera_height, GL_BGR_EXT, GL_UNSIGNED_BYTE, bkgnd );
-    glDrawPixels( camera_width, camera_height, GL_BGR, GL_UNSIGNED_BYTE, bkgnd );
+    glDrawPixels( camera_width, camera_height, GL_BGR, GL_UNSIGNED_BYTE, bkgnd ); // for MacOS
 
     glPopMatrix();
 
@@ -194,10 +198,11 @@ void display(GLFWwindow* window, const cv::Mat &img_bgr, std::vector<Marker> &ma
 		for (int y=0; y<4; ++y)
 			resultTransposedMatrix[x*4+y] = resultMatrix_005A[y*4+x];
 
-    // Fixed tranlate scale for MacOSX
+    // Fixed tranlate scale for MacOS
     float scale = 0.3;
     resultTransposedMatrix[12] *= scale;  // x方向のスケール調整
     resultTransposedMatrix[13] *= scale;  // y方向のスケール調整
+    // End for MacOS
     
 	//glLoadTransposeMatrixf( resultMatrix );
 	glLoadMatrixf( resultTransposedMatrix );
@@ -286,8 +291,8 @@ int main(int argc, char* argv[]) {
     // setup OpenCV
 	cv::Mat img_bgr;
 	InitializeVideoStream(cap);
-	const double kMarkerSize = 0.048;// 0.048; // [m]
-	MarkerTracker markerTracker(kMarkerSize, 87, 95);
+	const double kMarkerSize = MARKER_SIZE;
+	MarkerTracker markerTracker(kMarkerSize, THRESH, BW_THRESH);
 	
 	std::vector<Marker> markers;
 //	float resultMatrix[16];
@@ -327,5 +332,3 @@ int main(int argc, char* argv[]) {
     return 0;
 
 }
-
-
