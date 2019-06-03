@@ -1,21 +1,15 @@
 #define GL_SILENCE_DEPRECATION // for MacOSX
 #define GLFW_INCLUDE_GLU
-#include <glfw/glfw3.h>
-//#include <GL/glew.h>
-
+#include <GLFW/glfw3.h>
 #include <iostream>
 #include <iomanip>
 #include <opencv2/core.hpp>    // include OpenCV core headers
 #include <opencv2/imgproc.hpp> // include image processing headers
 #include <opencv2/highgui.hpp> // include GUI-related headers
 
-
 #include "PoseEstimation.h"
 #include "MarkerTracker.h"
 #include "DrawPrimitives.h"
-
-
-// Added in Exercise 9 - Start *****************************************************************
 
 struct Position { double x,y,z; };
 
@@ -29,12 +23,10 @@ int towardsList[2] = {0x005a, 0x0272};
 int towardscounter = 0;
 Position ballpos;
 int ballspeed = 100;
-// Added in Exercise 9 - End *****************************************************************
 
 //camera settings
-const int camera_width  = 1280; // for MacOSX
-const int camera_height = 720; // for MacOSX
-const int virtual_camera_angle = 30;
+const int camera_width  = 1280;
+const int camera_height = 720;
 unsigned char bkgnd[camera_width*camera_height*3];
 
 void InitializeVideoStream( cv::VideoCapture &camera ) {
@@ -52,7 +44,6 @@ void InitializeVideoStream( cv::VideoCapture &camera ) {
 	}
 }
 
-// Added in Exercise 9 - Start *****************************************************************
 void multMatrix(float mat[16], float vec[4])
 {
 	for(int i=0; i<4; i++)
@@ -120,18 +111,16 @@ void rotateToMarker(float thisMarker[16], float lookAtMarker[16], int markernumb
 	
 	glRotatef(angle, 0, 0, 1);
 }
-// Added in Exercise 9 - End *****************************************************************
 
 /* program & OpenGL initialization */
 void initGL(int argc, char *argv[])
 {
-// initialize the GL library
-// Added in Exercise 8 - End *****************************************************************
+    // initialize the GL library
     // pixel storage/packing stuff
 	glPixelStorei(GL_PACK_ALIGNMENT, 1);// for glReadPixels
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // for glTexImage2D
 	glPixelZoom(1.0, -1.0);
-// Added in Exercise 8 - End *****************************************************************
+
     // enable and set colors
     glEnable( GL_COLOR_MATERIAL );
     glClearColor( 0, 0, 0, 1.0 );
@@ -155,13 +144,12 @@ void initGL(int argc, char *argv[])
 
 void display(GLFWwindow* window, const cv::Mat &img_bgr, std::vector<Marker> &markers)
 {
-	const auto camera_image_size = sizeof(unsigned char) *img_bgr.rows*img_bgr.cols * 3;
 	auto background_buffer_size = sizeof(bkgnd);
 	memcpy(bkgnd, img_bgr.data, background_buffer_size);
 
 	int width0, height0;
 	glfwGetFramebufferSize(window, &width0, &height0);
-//	reshape(window, width, height);
+//    reshape(window, width, height);
 
     // clear buffers
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
@@ -179,18 +167,15 @@ void display(GLFWwindow* window, const cv::Mat &img_bgr, std::vector<Marker> &ma
 
     glRasterPos2i( 0, camera_height-1 );
 //    glDrawPixels( camera_width, camera_height, GL_BGR_EXT, GL_UNSIGNED_BYTE, bkgnd );
-    glDrawPixels( camera_width, camera_height, GL_BGR, GL_UNSIGNED_BYTE, bkgnd );  // for MacOSX
+    glDrawPixels( camera_width, camera_height, GL_BGR, GL_UNSIGNED_BYTE, bkgnd );
 
     glPopMatrix();
 
     glEnable(GL_DEPTH_TEST);
 
-//	return;
-
     // move to marker-position
     glMatrixMode( GL_MODELVIEW );
 
-// Added in Exercise 9 - Start *****************************************************************
 	float resultMatrix_005A[16];
 	float resultMatrix_0272[16];
 	for(int i=0; i<markers.size(); i++){
@@ -208,22 +193,17 @@ void display(GLFWwindow* window, const cv::Mat &img_bgr, std::vector<Marker> &ma
 	for (int x=0; x<4; ++x)
 		for (int y=0; y<4; ++y)
 			resultTransposedMatrix[x*4+y] = resultMatrix_005A[y*4+x];
-// Added in Exercise 9 - End *****************************************************************
 
     // Fixed tranlate scale for MacOSX
     float scale = 0.3;
     resultTransposedMatrix[12] *= scale;  // x方向のスケール調整
     resultTransposedMatrix[13] *= scale;  // y方向のスケール調整
-    // End for MacOSX
     
 	//glLoadTransposeMatrixf( resultMatrix );
 	glLoadMatrixf( resultTransposedMatrix );
-	drawSnowman();
+    drawSnowman();
 
-
-// Added in Exercise 9 - Start *****************************************************************
 	rotateToMarker(resultMatrix_005A, resultMatrix_0272, 0x005a);
-
 	drawSnowman();
 
 	for (int x=0; x<4; ++x)
@@ -233,7 +213,6 @@ void display(GLFWwindow* window, const cv::Mat &img_bgr, std::vector<Marker> &ma
 	glLoadMatrixf( resultTransposedMatrix );
 	
 	rotateToMarker(resultMatrix_0272, resultMatrix_005A, 0x0272);
-
 	drawSnowman();
 
 	//drawBall
@@ -241,8 +220,6 @@ void display(GLFWwindow* window, const cv::Mat &img_bgr, std::vector<Marker> &ma
 	glTranslatef((float) ballpos.x, (float) ballpos.y + 0.024f, (float) ballpos.z);
 	glColor4f(1,0,0,1);
 	drawSphere(0.005, 10, 10);
-// Added in Exercise 9 - End *****************************************************************
-
 	
 	//drawBall
 	for (int x=0; x<4; ++x)
@@ -254,11 +231,8 @@ void display(GLFWwindow* window, const cv::Mat &img_bgr, std::vector<Marker> &ma
 
 	int key = cv::waitKey (10);
 	if (key == 27) exit(0);
-	// Added in Exercise 9 - Start *****************************************************************
 	else if (key == 100) debugmode = !debugmode;
 	else if (key == 98) balldebug = !balldebug;
-	// Added in Exercise 9 - End *****************************************************************
-	
 }
 
 void reshape( GLFWwindow* window, int width, int height ) {
@@ -284,7 +258,6 @@ int main(int argc, char* argv[]) {
 	/* Initialize the library */
 	if (!glfwInit())
 		return -1;
-
 
 	// initialize the window system
 	/* Create a windowed mode window and its OpenGL context */
@@ -312,7 +285,6 @@ int main(int argc, char* argv[]) {
 
     // setup OpenCV
 	cv::Mat img_bgr;
-//    cv::Mat img_rgb; // for MacOSX
 	InitializeVideoStream(cap);
 	const double kMarkerSize = 0.048;// 0.048; // [m]
 	MarkerTracker markerTracker(kMarkerSize, 87, 95);
@@ -340,7 +312,6 @@ int main(int argc, char* argv[]) {
 //		cv::waitKey(10); /// Wait for one sec.
 
 		/* Render here */
-//        cv::cvtColor(img_bgr, img_rgb, cv::COLOR_BGR2RGB);
 		display(window, img_bgr, markers);
 
 		/* Swap front and back buffers */
